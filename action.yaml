@@ -16,4 +16,4 @@ runs:
         echo "AWS_ACCESS_KEY_ID=$(jq -r '.data.access_key' creds.json)" >> $GITHUB_ENV
         echo "AWS_SECRET_ACCESS_KEY=$(jq -r '.data.secret_key' creds.json)" >> $GITHUB_ENV
         echo "AWS_SESSION_TOKEN=$(jq -r '.data.security_token' creds.json)" >> $GITHUB_ENV
-        echo "AWS_ROLE_ARN=$(vault kv get -address=${{ inputs.vault_addr }} --format=json secret/aws/role/${NODIS_VAULT_ROLE} | jq -r '.arn')" >> $GITHUB_ENV
+        echo "AWS_ROLE_ARN=$(vault kv get -address=${{ inputs.vault_addr }} --format=json secret/aws/role/${NODIS_VAULT_ROLE} | jq -r '.data.data.arn')" >> $GITHUB_ENV
