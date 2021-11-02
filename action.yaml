@@ -4,12 +4,6 @@ inputs:
   vault_addr:
     description: ''
     required: true
-  vault_aws_role:
-    description: ''
-    required: true
-  aws_role:
-    description: ''
-    required: true
 runs:
   using: 'composite'
   steps:
@@ -18,8 +12,9 @@ runs:
     - name: Generate AWS credentials
       shell: bash
       run: |
-        vault read -address=${{ inputs.vault_addr }} aws/sts/${{ inputs.vault_role }} --format=json > creds.json
+        export AWS_ROLE_ARN=$(vault read -address=${{ inputs.vault_addr }} secret/aws/role/${NODIS_VAULT_ROLE} --format=json | jq -r '.arn')
+        vault read -address=${{ inputs.vault_addr }} aws/sts/${NODIS_VAULT_ROLE} --format=json > creds.json
         export AWS_ACCESS_KEY_ID=$(jq -r '.data.access_key' creds.json)
         export AWS_SECRET_ACCESS_KEY=$(jq -r '.data.secret_key' creds.json)
         export AWS_SESSION_TOKEN=$(jq -r '.data.security_token' creds.json)
-        export AWS_ROLE_ARN=${{ inputs.aws_role }}
+        
