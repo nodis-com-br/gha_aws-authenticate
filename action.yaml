@@ -25,4 +25,7 @@ runs:
         echo "::add-mask::${AWS_SESSION_TOKEN}"
         echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}" >> $GITHUB_ENV
         echo "::add-mask::${AWS_ROLE_ARN}"
-        
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ env.AWS_ROLE_ARN }}
