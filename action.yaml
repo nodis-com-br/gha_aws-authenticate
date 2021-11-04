@@ -4,6 +4,10 @@ inputs:
   vault_addr:
     description: ''
     required: true
+  aws_region:
+    description: ''
+    required: false
+    default: us-east-1
 runs:
   using: 'composite'
   steps:
@@ -25,7 +29,5 @@ runs:
         echo "::add-mask::${AWS_SESSION_TOKEN}"
         echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}" >> $GITHUB_ENV
         echo "::add-mask::${AWS_ROLE_ARN}"
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        role-to-assume: ${{ env.AWS_ROLE_ARN }}
+        echo "AWS_REGION=${{ inputs.aws_region }}" >> $GITHUB_ENV
+        
