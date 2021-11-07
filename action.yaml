@@ -4,10 +4,20 @@ inputs:
   vault_addr:
     description: ''
     required: true
+  vault_token:
+    description: ''
+    required: true
+  vault_role_kv_path:
+    description: ''
+    required: true
+  vault_creds_path:
+    description: ''
+    required: true
   aws_region:
     description: ''
     required: false
     default: us-east-1
+
 runs:
   using: 'composite'
   steps:
@@ -16,18 +26,25 @@ runs:
     - name: Generate AWS credentials
       shell: bash
       run: |
-        vault read -address=${{ inputs.vault_addr }} aws/sts/${NODIS_VAULT_ROLE} --format=json > creds.json
-        AWS_ACCESS_KEY_ID="$(jq -r '.data.access_key' creds.json)"
-        AWS_SECRET_ACCESS_KEY="$(jq -r '.data.secret_key' creds.json)"
-        AWS_SESSION_TOKEN="$(jq -r '.data.security_token' creds.json)"
-        AWS_ROLE_ARN="$(vault kv get -address=${{ inputs.vault_addr }} --format=json secret/aws/role/${NODIS_VAULT_ROLE} | jq -r '.data.data.arn')"
-        echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> $GITHUB_ENV
-        echo "::add-mask::${AWS_ACCESS_KEY_ID}"
-        echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> $GITHUB_ENV
-        echo "::add-mask::${AWS_SECRET_ACCESS_KEY}"
-        echo "AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}" >> $GITHUB_ENV
-        echo "::add-mask::${AWS_SESSION_TOKEN}"
-        echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}" >> $GITHUB_ENV
-        echo "::add-mask::${AWS_ROLE_ARN}"
         echo "AWS_REGION=${{ inputs.aws_region }}" >> $GITHUB_ENV
         
+        AWS_ROLE_ARN="$(vault kv get --format=json ${{ inputs.aws_role_path }} | jq -r '.data.data.arn')"
+        echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}" >> $GITHUB_ENV
+        echo "::add-mask::${AWS_ROLE_ARN}"
+        
+        vault read ${{ inputs.vault_aws_creds_path }} --format=json > creds.json
+        
+        AWS_ACCESS_KEY_ID="$(jq -r '.data.access_key' creds.json)"
+        echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> $GITHUB_ENV
+        echo "::add-mask::${AWS_ACCESS_KEY_ID}"
+        
+        AWS_SECRET_ACCESS_KEY="$(jq -r '.data.secret_key' creds.json)"
+        echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> $GITHUB_ENV
+        echo "::add-mask::${AWS_SECRET_ACCESS_KEY}"
+  
+        AWS_SESSION_TOKEN="$(jq -r '.data.security_token' creds.json)"
+        echo "AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}" >> $GITHUB_ENV
+        echo "::add-mask::${AWS_SESSION_TOKEN}"
+      env:
+        VAULT_ADDR: ${{ inputs.vault_addr }}
+        VAULT_TOKEN: ${{ inputs.vault_token }}
