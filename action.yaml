@@ -7,9 +7,6 @@ inputs:
   vault_token:
     description: ''
     required: true
-  vault_role_kv_path:
-    description: ''
-    required: true
   vault_creds_path:
     description: ''
     required: true
@@ -22,17 +19,17 @@ runs:
   using: 'composite'
   steps:
     - name: Install Vault
-      uses: innovationnorway/setup-vault@v1
+      uses: myci-actions/add-deb-repo@10
+      with:
+        repo: deb [arch=amd64] https://apt.releases.hashicorp.com focal main
+        repo-name: hashicorp
+        keys-asc: https://apt.releases.hashicorp.com/gpg
+        install: vault
     - name: Generate AWS credentials
       shell: bash
       run: |
         echo "AWS_REGION=${{ inputs.aws_region }}" >> $GITHUB_ENV
         echo "::set-output name=aws_region::$(echo ${AWS_REGION})"
-        
-        AWS_ROLE_ARN="$(vault kv get --format=json ${{ inputs.vault_role_kv_path }} | jq -r '.data.data.arn')"
-        echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}" >> $GITHUB_ENV
-        echo "::add-mask::${AWS_ROLE_ARN}"
-        echo "::set-output name=aws_role_arn::$(echo ${AWS_ROLE_ARN})"
         
         vault read ${{ inputs.vault_creds_path }} --format=json > creds.json
         
